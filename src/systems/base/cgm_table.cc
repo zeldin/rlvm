@@ -98,14 +98,19 @@ CGMTable::CGMTable(Gameexe& gameexe) {
     throw rlvm::Exception(oss.str());
   }
 
-  if (strncmp(data.get(), "CGTABLE", 7) != 0) {
+  bool is2k;
+  if (strncmp(data.get(), "CGTABLE", 7) == 0) {
+    is2k = true;
+  } else if (strncmp(data.get(), "CGMDT", 5) == 0) {
+    is2k = false;
+  } else {
     std::ostringstream oss;
     oss << "File '" << filename << "' is not a CGM file!";
     throw rlvm::Exception(oss.str());
   }
 
   int record_size = 36;
-  if (data[7] == '2') {
+  if (is2k && data[7] == '2') {
     // I'm not sure when this started, but in Kud Wafter, the record size for
     // an entry in a CGM file seems to have changed. Possibly as a version 2
     // for the file? None of the rest of the added bytes appear to be set,
@@ -121,8 +126,13 @@ CGMTable::CGMTable(Gameexe& gameexe) {
   int dest_size = cgm_size * record_size;
   std::unique_ptr<char[]> dest_orig(new char[dest_size + 1024]);
   char* dest = dest_orig.get();
-  char* src = data.get() + 0x28;
-  ARCINFO::Extract2k(dest, src, dest + dest_size, data.get() + size);
+  if (is2k) {
+    char* src = data.get() + 0x28;
+    ARCINFO::Extract2k(dest, src, dest + dest_size, data.get() + size);
+  } else {
+    char* src = data.get() + 0x30;
+    ARCINFO::Extract(dest, src, dest + dest_size, data.get() + size);
+  }
   dest = dest_orig.get();
   for (int i = 0; i < cgm_size; i++) {
     char* s = dest + i * record_size;
