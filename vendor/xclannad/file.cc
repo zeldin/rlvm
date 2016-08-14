@@ -453,6 +453,21 @@ public:
 	}
 	static int IsRev(void) { return 0; }
 };
+/* 書庫用 */
+class Extract_DataType_ARC {
+public:
+	void ExtractData(const char*& lsrc, int& data, int& size) {
+		data = read_little_endian_short(lsrc) & 0xffff;
+		size = (data&0x0f) + 2;
+		data = (data>>4) + 1;
+		lsrc+= 2;
+	}
+	static void Copy1Pixel(const char*& lsrc, char*& ldest) {
+		*ldest = *lsrc;
+		ldest++; lsrc++;
+	}
+	static int IsRev(void) { return 0; }
+};
 /* avg2000 のシナリオ用 */
 class Extract_DataType_SCN2k {
 public:
@@ -572,6 +587,12 @@ bool PDTCONV::Read_PDT11(char* image) {
 /* dest は dest_end よりも 256 byte 以上先まで
 ** 書き込み可能であること。
 */
+void ARCINFO::Extract(char*& dest_start, char*& src_start, char* dest_end, char* src_end) {
+	const char* src = src_start;
+	while (lzExtract(Extract_DataType_ARC(), char(), src, dest_start, src_end, dest_end)) ;
+	src_start = (char*)src;
+	return;
+}
 void ARCINFO::Extract2k(char*& dest_start, char*& src_start, char* dest_end, char* src_end) {
 	const char* src = src_start;
 	while (lzExtract(Extract_DataType_SCN2k(), char(), src, dest_start, src_end, dest_end)) ;

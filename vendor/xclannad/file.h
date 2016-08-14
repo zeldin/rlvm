@@ -32,6 +32,7 @@
 class ARCINFO {
 public:
 	/* dest は256byte 程度の余裕があること */
+	static void Extract(char*& dest, char*& src, char* destend, char* srcend);
 	static void Extract2k(char*& dest, char*& src, char* destend, char* srcend);
 };
 
